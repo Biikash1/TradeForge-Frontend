@@ -1,13 +1,15 @@
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import cryptoImage from "@/assets/cryptoImage.png";
+import Sidebar from "./Sidebar";
 
 const Navbar = () => {
   return (
@@ -24,13 +26,23 @@ const Navbar = () => {
             </Button>
           </SheetTrigger>
 
-          <SheetContent side="left">
+          <SheetContent
+           className="w-72 border-r-0 flex flex-col"
+          side="left">
             <SheetHeader>
-              <SheetTitle>Are you absolutely sure?</SheetTitle>
-              <SheetDescription>
-                This action cannot be undone.
-              </SheetDescription>
+              <SheetTitle>
+                <div className="flex items-center justify-center gap-2 text-3xl">
+                 <Avatar className="h-10 w-10">
+                   <AvatarImage src={cryptoImage} />
+                 </Avatar>
+                 <div>
+                  <span className="font-bold text-orange-700">Crypto</span>
+                  <span>Trade</span>
+                 </div>
+                </div>
+              </SheetTitle>
             </SheetHeader>
+            <Sidebar />
           </SheetContent>
         </Sheet>
       </div>
