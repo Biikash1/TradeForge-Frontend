@@ -1,4 +1,4 @@
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -7,7 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import cryptoImage from "@/assets/cryptoImage.png";
 import Sidebar from "./Sidebar";
 
@@ -45,7 +45,26 @@ const Navbar = () => {
             <Sidebar />
           </SheetContent>
         </Sheet>
+        <p className="text-sm lg:text-base cursor-pointer">
+          Crypto Trading
+        </p>
+        <div className="p-0 ml-9">
+          <Button
+            variant="outline"
+            className="flex items-center gap-3"
+          >
+            <Search className="h-5 w-5" />
+            <span>Search</span>
+          </Button>
+        </div>
       </div>
+       <div>
+          <Avatar>
+            <AvatarFallback>
+                B
+            </AvatarFallback>
+          </Avatar>
+       </div>
     </div>
   );
 };

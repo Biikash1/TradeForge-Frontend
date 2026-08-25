@@ -1,3 +1,4 @@
+import Home from "./pages/Home/Home";
 import Navbar from "./pages/Navbar/Navbar";
 
 function App() {
@@ -5,6 +6,7 @@ function App() {
   return (
     <>
      <Navbar/>
+     <Home/>
     </>
   );
 }
