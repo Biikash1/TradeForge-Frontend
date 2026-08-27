@@ -7,19 +7,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import btc from "@/assets/btc.png"
+import btc from "@/assets/btc.png";
 import { Button } from "@/components/ui/button";
 import { BookmarkFilledIcon } from "@radix-ui/react-icons";
 
 const Watchlist = () => {
+  const handleRemoveToWatchlist = (value) => {
+    console.log(value);
+  };
 
-    const handleRemoveToWatchlist=(value) => {
-        console.log(value)
-    }
-
-    return (
-         <div className="p-5 lg:p-20">
-        <h1 className="font-bold text-3xl pb-5">Watchlist</h1>
+  return (
+    <div className="p-5 lg:p-20">
+      <h1 className="font-bold text-3xl pb-5">Watchlist</h1>
       <Table className="border">
         <TableHeader>
           <TableRow>
@@ -29,7 +28,7 @@ const Watchlist = () => {
             <TableHead>MARKET CAP</TableHead>
             <TableHead>24H</TableHead>
             <TableHead className="">PRICE</TableHead>
-             <TableHead className="text-right text-red-600">REMOVE</TableHead>
+            <TableHead className="text-right text-red-600">REMOVE</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -47,11 +46,13 @@ const Watchlist = () => {
               <TableCell>-0.1674</TableCell>
               <TableCell className="">$78986</TableCell>
               <TableCell className="text-right">
-                <Button 
-                variant="ghost"
-                 onClick={()=> handleRemoveToWatchlist(item.id)}
-                size="icon" className="h-10 w-10">
-                    <BookmarkFilledIcon className="w-6 h-6"/>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleRemoveToWatchlist(item.id)}
+                  size="icon"
+                  className="h-10 w-10"
+                >
+                  <BookmarkFilledIcon className="w-6 h-6" />
                 </Button>
               </TableCell>
             </TableRow>
@@ -59,7 +60,7 @@ const Watchlist = () => {
         </TableBody>
       </Table>
     </div>
-    )
-}
+  );
+};
 
 export default Watchlist;
