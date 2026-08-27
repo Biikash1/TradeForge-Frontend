@@ -42,7 +42,7 @@ const Wallet = () => {
               </div>
               <div className="flex gap-7 mt-5">
                   <Dialog>
-                    <DialogTrigger>
+                    <DialogTrigger asChild>
                         <div className="h-24 w-24 hover:text-gray-400 cursor-pointer
                         flex flex-col items-center justify-center rounded-md 
                         shadow-slate-800 shadow-md">
@@ -61,7 +61,7 @@ const Wallet = () => {
                   </Dialog>
 
                    <Dialog>
-                    <DialogTrigger>
+                    <DialogTrigger asChild>
                         <div className="h-24 w-24 hover:text-gray-400 cursor-pointer
                         flex flex-col items-center justify-center rounded-md 
                         shadow-slate-800 shadow-md">
@@ -80,7 +80,7 @@ const Wallet = () => {
                   </Dialog>
 
                   <Dialog>
-                    <DialogTrigger>
+                    <DialogTrigger asChild>
                         <div className="h-24 w-24 hover:text-gray-400 cursor-pointer
                         flex flex-col items-center justify-center rounded-md 
                         shadow-slate-800 shadow-md">
