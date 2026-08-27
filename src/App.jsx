@@ -10,7 +10,6 @@ import Payment from "./pages/Payment/Payment";
 import StockDetails from "./pages/Stock Details/StockDetails";
 import Watchlist from "./pages/Watchlist/Watchlist";
 import Profile from "./pages/Profile/Profile";
-import SearchCoins from "./pages/Search/SearchCoins";
 import NotFound from "./pages/NotFound/NotFound";
 
 function App() {
@@ -19,7 +18,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/protfolio" element={<Portfolio />} />
+        <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/activity" element={<Activity />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/withdrawal" element={<Withdrawal />} />
