@@ -7,12 +7,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import btc from "@/assets/btc.png"
+import btc from "@/assets/btc.png";
 
 const Portfolio = () => {
-  return(
+  return (
     <div className="p-5 lg:p-20">
-        <h1 className="font-bold text-3xl pb-5">Portfolio</h1>
+      <h1 className="font-bold text-3xl pb-5">Portfolio</h1>
       <Table>
         <TableHeader>
           <TableRow>

@@ -15,9 +15,9 @@ const TopupForm = () => {
     setPaymentMethod(value);
   };
 
-  const  handleSubmit = () => {
-    console.log(amount, paymentMethod)
-  }
+  const handleSubmit = () => {
+    console.log(amount, paymentMethod);
+  };
 
   const handleChange = (e) => {
     setAmount(e.target.value);
@@ -26,7 +26,9 @@ const TopupForm = () => {
   return (
     <div className="pt-6 space-y-6 w-full">
       <div>
-        <h1 className="pb-2 text-sm font-medium text-slate-300">Enter Amount</h1>
+        <h1 className="pb-2 text-sm font-medium text-slate-300">
+          Enter Amount
+        </h1>
         <Input
           onChange={handleChange}
           value={amount}
@@ -36,8 +38,10 @@ const TopupForm = () => {
       </div>
 
       <div>
-        <h1 className="pb-3 text-sm font-medium text-slate-300">Select Payment Method</h1>
-        
+        <h1 className="pb-3 text-sm font-medium text-slate-300">
+          Select Payment Method
+        </h1>
+
         <RadioGroup
           value={paymentMethod}
           onValueChange={handlePaymentMethodChange}
@@ -51,9 +55,12 @@ const TopupForm = () => {
               value="RAZORPAY"
               id="r1"
             />
-            <Label htmlFor="r1" className="cursor-pointer flex-1 w-full min-w-0">
+            <Label
+              htmlFor="r1"
+              className="cursor-pointer flex-1 w-full min-w-0"
+            >
               <div className="bg-white rounded-md h-10 w-full flex items-center justify-center px-2 shadow-sm overflow-hidden">
-                <img 
+                <img
                   src={razorpayImage}
                   alt="Razorpay"
                   className="h-6 w-auto max-w-[85%] object-contain scale-110"
@@ -70,11 +77,14 @@ const TopupForm = () => {
               value="STRIPE"
               id="r2"
             />
-            <Label htmlFor="r2" className="cursor-pointer flex-1 w-full min-w-0">
+            <Label
+              htmlFor="r2"
+              className="cursor-pointer flex-1 w-full min-w-0"
+            >
               <div className="bg-white rounded-md h-10 w-full flex items-center justify-center px-2 shadow-sm overflow-hidden">
-                <img 
-                  src={stripeImages} 
-                  alt="Stripe" 
+                <img
+                  src={stripeImages}
+                  alt="Stripe"
                   className="h-6 w-auto max-w-[85%] object-contain scale-110"
                 />
               </div>
@@ -82,11 +92,11 @@ const TopupForm = () => {
           </div>
         </RadioGroup>
       </div>
-        <div>
-            <Button onClick={handleSubmit} className="w-full py-7">
-                Submit
-            </Button>
-        </div>
+      <div>
+        <Button onClick={handleSubmit} className="w-full py-7">
+          Submit
+        </Button>
+      </div>
     </div>
   );
 };
