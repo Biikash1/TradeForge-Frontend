@@ -26,45 +26,36 @@ const Navbar = () => {
             </Button>
           </SheetTrigger>
 
-          <SheetContent
-           className="w-72 border-r-0 flex flex-col"
-          side="left">
+          <SheetContent className="w-72 border-r-0 flex flex-col" side="left">
             <SheetHeader>
               <SheetTitle>
                 <div className="flex items-center justify-center gap-2 text-3xl">
-                 <Avatar className="h-10 w-10">
-                   <AvatarImage src={cryptoImage} />
-                 </Avatar>
-                 <div>
-                  <span className="font-bold text-orange-700">Crypto</span>
-                  <span>Trade</span>
-                 </div>
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={cryptoImage} />
+                  </Avatar>
+                  <div>
+                    <span className="font-bold text-orange-700">Crypto</span>
+                    <span>Trade</span>
+                  </div>
                 </div>
               </SheetTitle>
             </SheetHeader>
             <Sidebar />
           </SheetContent>
         </Sheet>
-        <p className="text-sm lg:text-base cursor-pointer">
-          Crypto Trading
-        </p>
+        <p className="text-sm lg:text-base cursor-pointer">Crypto Trading</p>
         <div className="p-0 ml-9">
-          <Button
-            variant="outline"
-            className="flex items-center gap-3"
-          >
+          <Button variant="outline" className="flex items-center gap-3">
             <Search className="h-5 w-5" />
             <span>Search</span>
           </Button>
         </div>
       </div>
-       <div>
-          <Avatar>
-            <AvatarFallback>
-                B
-            </AvatarFallback>
-          </Avatar>
-       </div>
+      <div>
+        <Avatar>
+          <AvatarFallback>B</AvatarFallback>
+        </Avatar>
+      </div>
     </div>
   );
 };

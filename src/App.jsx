@@ -6,7 +6,6 @@ import Activity from "./pages/Activity/Activity";
 import Wallet from "./pages/Wallet/Wallet";
 import Withdrawal from "./pages/Withdrawal/Withdrawal";
 import PaymentDetails from "./pages/Payment Details/PaymentDetails";
-import Payment from "./pages/Payment/Payment";
 import StockDetails from "./pages/Stock Details/StockDetails";
 import Watchlist from "./pages/Watchlist/Watchlist";
 import Profile from "./pages/Profile/Profile";
@@ -23,12 +22,10 @@ function App() {
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/withdrawal" element={<Withdrawal />} />
         <Route path="/payment-details" element={<PaymentDetails />} />
-        <Route path="/payment" element={<Payment />} />
         <Route path="/market/:id" element={<StockDetails />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/*" element={<NotFound />} />
-
       </Routes>
     </>
   );

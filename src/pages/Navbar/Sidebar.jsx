@@ -63,9 +63,7 @@ const menu = [
 ];
 
 const Sidebar = () => {
-
   const navigate = useNavigate();
-
 
   return (
     <div className="mt-10 space-y-5">

@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import btc from "@/assets/btc.png"
+import btc from "@/assets/btc.png";
 
 const AssetTable = () => {
   return (
@@ -23,19 +23,21 @@ const AssetTable = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {[1,1,1,1,1,1,1,1,1,1,1,1,1].map((item, index) => <TableRow key={index}>
-          <TableCell className="font-medium flex items-center gap-2">
-            <Avatar className="-z-50">
+        {[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1].map((item, index) => (
+          <TableRow key={index}>
+            <TableCell className="font-medium flex items-center gap-2">
+              <Avatar className="-z-50">
                 <AvatarImage src={btc} />
-            </Avatar>
-            <span>Bitcoin</span>
-          </TableCell>
-          <TableCell>BTC</TableCell>
-          <TableCell>53765825355</TableCell>
-          <TableCell>1585855827988</TableCell>
-          <TableCell>-0.1674</TableCell>
-          <TableCell className="text-right">$78986</TableCell>
-        </TableRow>)}
+              </Avatar>
+              <span>Bitcoin</span>
+            </TableCell>
+            <TableCell>BTC</TableCell>
+            <TableCell>53765825355</TableCell>
+            <TableCell>1585855827988</TableCell>
+            <TableCell>-0.1674</TableCell>
+            <TableCell className="text-right">$78986</TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

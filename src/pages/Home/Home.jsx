@@ -12,22 +12,22 @@ const Home = () => {
   const [inputValue, setInputValue] = useState("");
   const [isBotRealease, setIsBotRealease] = useState(false);
 
-  const handleBotRealease =() => setIsBotRealease(!isBotRealease);
+  const handleBotRealease = () => setIsBotRealease(!isBotRealease);
 
   const handlecategory = (value) => {
     setCategory(value);
   };
 
   const handleChange = (e) => {
-      setInputValue(e.target.value);
+    setInputValue(e.target.value);
   };
 
   const handleKeyPress = (event) => {
-    if(event.key == "Enter") {
+    if (event.key == "Enter") {
       console.log(inputValue);
     }
-    setInputValue("")
-  }
+    setInputValue("");
+  };
 
   return (
     <div className="relative">
@@ -95,74 +95,75 @@ const Home = () => {
         </div>
       </div>
       <section className="absolute bottom-5 right-5 z-40 flex flex-col justify-end items-end gap-2">
-       {isBotRealease && <div
-          className="rounded-md w-[20rem] md:w-[25rem] lg:w-[25rem]
+        {isBotRealease && (
+          <div
+            className="rounded-md w-[20rem] md:w-[25rem] lg:w-[25rem]
           h-[70vh] bg-slate-900"
-        >
-          <div
-            className="flex justify-between items-center border-b px-6
+          >
+            <div
+              className="flex justify-between items-center border-b px-6
               h-[12%]"
-          >
-            <p>Chat Bot</p>
-            <Button 
-              onClick={handleBotRealease}
-            variant="ghost" size="icon">
-              <X />
-            </Button>
-          </div>
-          <div
-            className="h-[76%] flex flex-col overflow-y-auto gap-5
-           px-5 py-2 scroll-container"
-          >
-            <div className="self-start pb-5 w-auto">
-              <div
-                className="justify-end self-end px-5 py-2 
-             rounded-md bg-slate-800 w-auto"
-              >
-                <p>hi, Ayush</p>
-                <p>You can ask crypto related any question</p>
-                <p>like price, market cap extra...</p>
-              </div>
+            >
+              <p>Chat Bot</p>
+              <Button onClick={handleBotRealease} variant="ghost" size="icon">
+                <X />
+              </Button>
             </div>
-
-            {[1, 1, 1, 1].map((item, i) => (
-              <div
-                key={i}
-                className={` ${i % 2 == 0 ? "self-start" : "self-end"} "pb-5 w-auto"`}
-              >
-                {i % 2 == 0 ? (
-                  <div
-                    className="justify-end self-end px-5 py-2 
+            <div
+              className="h-[76%] flex flex-col overflow-y-auto gap-5
+           px-5 py-2 scroll-container"
+            >
+              <div className="self-start pb-5 w-auto">
+                <div
+                  className="justify-end self-end px-5 py-2 
              rounded-md bg-slate-800 w-auto"
-                  >
-                    <p>prompt who are you</p>
-                  </div>
-                ) : (
-                  <div
-                    className="justify-end self-end px-5 py-2 
-             rounded-md bg-slate-800 w-auto"
-                  >
-                    <p>ans hii, Ayush</p>
-                  </div>
-                )}
+                >
+                  <p>hi, Ayush</p>
+                  <p>You can ask crypto related any question</p>
+                  <p>like price, market cap extra...</p>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="h-[12%] border-t">
-             <Input 
+
+              {[1, 1, 1, 1].map((item, i) => (
+                <div
+                  key={i}
+                  className={` ${i % 2 == 0 ? "self-start" : "self-end"} "pb-5 w-auto"`}
+                >
+                  {i % 2 == 0 ? (
+                    <div
+                      className="justify-end self-end px-5 py-2 
+             rounded-md bg-slate-800 w-auto"
+                    >
+                      <p>prompt who are you</p>
+                    </div>
+                  ) : (
+                    <div
+                      className="justify-end self-end px-5 py-2 
+             rounded-md bg-slate-800 w-auto"
+                    >
+                      <p>ans hii, Ayush</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="h-[12%] border-t">
+              <Input
                 className="w-full h-full order-none outline-none"
                 placeholder="write prompt"
                 onChange={handleChange}
                 value={inputValue}
                 onKeyPress={handleKeyPress}
-             />
+              />
+            </div>
           </div>
-        </div> }
+        )}
 
         <div className="relative w-[10rem] cursor-pointer group">
-          <Button 
-          onClick={handleBotRealease}
-          className="w-full h-[3rem] gap-2 items-center">
+          <Button
+            onClick={handleBotRealease}
+            className="w-full h-[3rem] gap-2 items-center"
+          >
             <MessageCircle
               size={30}
               className="fill-[#1e293b] -rotate-90 stroke-none group-hover:fill-[#1a1a1a]"
