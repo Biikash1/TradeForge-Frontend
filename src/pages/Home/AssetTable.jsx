@@ -8,8 +8,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import btc from "@/assets/btc.png";
+import { useNavigate } from "react-router-dom";
 
 const AssetTable = () => {
+
+  const navigate = useNavigate();
+
   return (
     <Table>
       <TableHeader>
@@ -25,7 +29,7 @@ const AssetTable = () => {
       <TableBody>
         {[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1].map((item, index) => (
           <TableRow key={index}>
-            <TableCell className="font-medium flex items-center gap-2">
+            <TableCell  onClick={() => navigate("/market/bitcoin")} className="font-medium flex items-center gap-2">
               <Avatar className="-z-50">
                 <AvatarImage src={btc} />
               </Avatar>
