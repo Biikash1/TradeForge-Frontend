@@ -3,9 +3,13 @@ import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { Login } from "@/State/Authentication/Action";
 
 const SigninForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -19,8 +23,8 @@ const SigninForm = () => {
   });
 
   const onSubmit = async (data) => {
+    dispatch(Login(data));
     console.log("Signin Form Submitted:", data);
-    // API request here: await authService.login(data);
   };
 
   return (

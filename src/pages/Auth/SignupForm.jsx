@@ -3,9 +3,13 @@ import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { Register } from "@/State/Authentication/Action";
 
 const SignupForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -16,12 +20,13 @@ const SignupForm = () => {
       fullName: "",
       email: "",
       password: "",
+      mobile: "",
     },
   });
 
   const onSubmit = async (data) => {
+    dispatch(Register(data));
     console.log("Signup Form Submitted:", data);
-    // API request: await authService.signup(data);
   };
 
   return (
@@ -85,11 +90,29 @@ const SignupForm = () => {
           )}
         </div>
 
-        {/* Password */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-slate-300">
-            Password
+            Mobile Number
           </label>
+          <Input
+            type="tel"
+            autoComplete="tel"
+            className="w-full bg-slate-950/60 border-slate-700 text-white placeholder:text-slate-500 py-5 focus-visible:ring-cyan-500"
+            placeholder="+91 9876543210"
+            {...register("mobile", {
+              required: "Mobile number is required",
+            })}
+          />
+          {errors.mobile && (
+            <p className="text-xs text-red-400 font-medium">
+              {errors.mobile.message}
+            </p>
+          )}
+        </div>
+
+        {/* Password */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-slate-300">Password</label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
@@ -99,8 +122,8 @@ const SignupForm = () => {
               {...register("password", {
                 required: "Password is required",
                 minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
+                  value: 8,
+                  message: "Password must be at least 8 characters",
                 },
               })}
             />

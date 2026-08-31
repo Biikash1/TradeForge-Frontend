@@ -11,12 +11,34 @@ import Watchlist from "./pages/Watchlist/Watchlist";
 import Profile from "./pages/Profile/Profile";
 import NotFound from "./pages/NotFound/NotFound";
 import Auth from "./pages/Auth/Auth";
+import { Toaster } from "sonner";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getUser } from "./State/Authentication/Action";
 
 function App() {
+  const { auth } = useSelector((store) => store);
+
+  const dispatch = useDispatch();
+
+  console.log(" auth ....", auth);
+
+  // Normalize token string
+  const token =
+    typeof auth?.jwt === "string"
+      ? auth.jwt
+      : auth?.jwt?.jwt || localStorage.getItem("jwt");
+
+  useEffect(() => {
+    if (token) {
+      dispatch(getUser(token));
+    }
+  }, [token, dispatch]);
+
   return (
     <>
-      <Auth />
-      {false && (
+      <Toaster position="top-center" richColors />
+      {auth.user ? (
         <div>
           <Navbar />
           <Routes>
@@ -32,6 +54,8 @@ function App() {
             <Route path="/*" element={<NotFound />} />
           </Routes>
         </div>
+      ) : (
+        <Auth />
       )}
     </>
   );
