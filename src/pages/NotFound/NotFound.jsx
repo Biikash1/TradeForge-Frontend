@@ -1,7 +1,5 @@
-const NotFound= () => {
-    retrun (
-        <div>NotFound</div>
-    )
-}
+const NotFound = () => {
+  return <div>NotFound</div>;
+};
 
 export default NotFound;

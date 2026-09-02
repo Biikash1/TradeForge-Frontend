@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { Login } from "@/State/Authentication/Action";
+import { useNavigate } from "react-router-dom";
 
 const SigninForm = () => {
   const [showPassword, setShowPassword] = useState(false);
-
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -23,8 +25,15 @@ const SigninForm = () => {
   });
 
   const onSubmit = async (data) => {
-    dispatch(Login(data));
-    console.log("Signin Form Submitted:", data);
+    try {
+      await dispatch(Login(data));
+      navigate("/"); // Navigates only if login succeeds
+    } catch (error) {
+      console.error("Login failed:", error);
+      setError("root", {
+        message: error?.message || "Invalid credentials. Please try again.",
+      });
+    }
   };
 
   return (
@@ -39,12 +48,20 @@ const SigninForm = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Address */}
+        {errors.root && (
+          <div className="p-2.5 rounded bg-red-500/10 border border-red-500/20 text-center">
+            <p className="text-xs text-red-400 font-medium">
+              {errors.root.message}
+            </p>
+          </div>
+        )}
+
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-300">
+          <label htmlFor="email" className="text-sm font-medium text-slate-300">
             Email Address
           </label>
           <Input
+            id="email"
             type="email"
             autoComplete="email"
             className="w-full bg-slate-950/60 border-slate-700 text-white placeholder:text-slate-500 py-5 focus-visible:ring-cyan-500"
@@ -64,13 +81,16 @@ const SigninForm = () => {
           )}
         </div>
 
-        {/* Password */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-300">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium text-slate-300"
+          >
             Password
           </label>
           <div className="relative">
             <Input
+              id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               className="w-full bg-slate-950/60 border-slate-700 text-white placeholder:text-slate-500 py-5 pr-10 focus-visible:ring-cyan-500"
@@ -81,7 +101,8 @@ const SigninForm = () => {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -94,7 +115,6 @@ const SigninForm = () => {
           )}
         </div>
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isSubmitting}
