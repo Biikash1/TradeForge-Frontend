@@ -1,66 +1,95 @@
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { transferMoney } from "@/State/Wallet/ActionWallet";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 const TransferForm = () => {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
-    amount: "",
     walletId: "",
+    amount: "",
     purpose: "",
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    console.log(formData);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const jwt = localStorage.getItem("jwt");
+
+    if (!formData.walletId || !formData.amount) {
+      alert("Please enter recipient wallet ID and transfer amount.");
+      return;
+    }
+
+    dispatch(
+      transferMoney({
+        jwt,
+        walletId: formData.walletId,
+        reqData: {
+          amount: parseFloat(formData.amount),
+          purpose: formData.purpose || "Wallet Transfer",
+        },
+      })
+    );
   };
 
   return (
-    <div className="pt-10 space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4 pt-2">
       <div>
-        <h1 className="pb-1">Enter Amount</h1>
-        <Input
-          name="amount"
-          onChange={handleChange}
-          value={formData.amount}
-          className="py-7"
-          placeholder="$9999"
-        />
-      </div>
-
-      <div>
-        <h1 className="pb-1">Wallet Id</h1>
+        <label className="text-xs text-slate-400 font-medium">Recipient Wallet ID</label>
         <Input
           name="walletId"
-          onChange={handleChange}
+          placeholder="e.g. 102"
+          type="number"
           value={formData.walletId}
-          className="py-7"
-          placeholder="#ADER455"
+          onChange={handleChange}
+          className="bg-slate-950/60 border-slate-800 text-white mt-1"
+          required
         />
       </div>
 
       <div>
-        <h1 className="pb-1">Purpose</h1>
+        <label className="text-xs text-slate-400 font-medium">Amount (USD)</label>
         <Input
-          name="purpose"
+          name="amount"
+          placeholder="0.00"
+          type="number"
+          step="0.01"
+          min="0.01"
+          value={formData.amount}
           onChange={handleChange}
-          value={formData.purpose}
-          className="py-7"
-          placeholder="gift for your friend"
+          className="bg-slate-950/60 border-slate-800 text-white mt-1"
+          required
         />
       </div>
-      <DialogClose className="w-full">
-        <Button onClick={handleSubmit} className="w-full py-7">
-          Submit
-        </Button>
-      </DialogClose>
-    </div>
+
+      <div>
+        <label className="text-xs text-slate-400 font-medium">Purpose / Note (Optional)</label>
+        <Input
+          name="purpose"
+          placeholder="e.g. For dinner, Project fee"
+          value={formData.purpose}
+          onChange={handleChange}
+          className="bg-slate-950/60 border-slate-800 text-white mt-1"
+        />
+      </div>
+
+      <div className="pt-2">
+        <DialogClose asChild>
+          <Button
+            type="submit"
+            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold"
+          >
+            Send Transfer
+          </Button>
+        </DialogClose>
+      </div>
+    </form>
   );
 };
 
