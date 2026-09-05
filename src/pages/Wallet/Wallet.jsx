@@ -36,7 +36,7 @@ const Wallet = () => {
   const navigate = useNavigate();
   const hasDeposited = useRef(false);
 
-  const { wallet } = useSelector((store) => store);
+const wallet = useSelector((store) => store.wallet);
   const userWallet = wallet?.userWallet;
   const transactions = wallet?.transactions || [];
 

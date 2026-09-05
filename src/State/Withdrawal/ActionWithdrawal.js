@@ -155,8 +155,6 @@ export const getAllWithdrawalRequest = (param) => async (dispatch) => {
     });
   }
 };
-
-// POST /api/payment-details -> body: { accountHolderName, ifsc, accountNumber, bankName }
 export const addPaymentDetails =
   ({ paymentDetails, jwt }) =>
   async (dispatch) => {
@@ -191,34 +189,27 @@ export const addPaymentDetails =
     }
   };
 
-// GET /api/payment-details
 export const getPaymentDetails = (param) => async (dispatch) => {
   dispatch({ type: GET_PAYMENT_DETAILS_REQUEST });
-  const jwt = typeof param === "string" ? param : param?.jwt;
+  const rawJwt = typeof param === "string" ? param : param?.jwt;
+  const jwt = rawJwt?.startsWith("{") ? JSON.parse(rawJwt)?.jwt : rawJwt;
 
   try {
     const response = await api.get("/api/payment-details", {
       headers: { Authorization: `Bearer ${jwt}` },
     });
 
+    console.log("===> RAW BACKEND PAYMENT DETAILS RESPONSE:", response.data);
+
     dispatch({
       type: GET_PAYMENT_DETAILS_SUCCESS,
       payload: response.data,
     });
   } catch (error) {
-    // 404 indicates the user hasn't added payment details yet, avoid triggering a disruptive error toast
-    const status = error.response?.status;
-    const errorMessage =
-      error.response?.data?.message || error.message || "Failed to fetch bank details";
-
-    if (status !== 404) {
-      toast.error(errorMessage);
-    }
-    console.warn("Get Payment Details Status:", status || errorMessage);
-
+    console.error("===> GET PAYMENT DETAILS FAILED:", error.response?.data || error.message);
     dispatch({
       type: GET_PAYMENT_DETAILS_FAILURE,
-      payload: errorMessage,
+      payload: error.message,
     });
   }
 };

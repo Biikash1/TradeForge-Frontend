@@ -24,7 +24,7 @@ const initialState = {
   history: [],
   loading: false,
   error: null,
-  paymentDetails: null,
+  paymentDetails: [], // Always maintain an array for multi-account support
   requests: [],
 };
 
@@ -50,14 +50,32 @@ const withdrawalReducer = (state = initialState, action) => {
         error: null,
       };
 
-    case ADD_PAYMENT_DETAILS_SUCCESS:
     case GET_PAYMENT_DETAILS_SUCCESS:
       return {
         ...state,
-        paymentDetails: action.payload,
         loading: false,
+        paymentDetails: Array.isArray(action.payload)
+          ? action.payload
+          : action.payload
+          ? [action.payload]
+          : [],
         error: null,
       };
+
+    case ADD_PAYMENT_DETAILS_SUCCESS: {
+      const currentList = Array.isArray(state.paymentDetails)
+        ? state.paymentDetails
+        : [];
+      const updatedList = currentList.filter(
+        (item) => item.id !== action.payload.id
+      );
+      return {
+        ...state,
+        loading: false,
+        paymentDetails: [action.payload, ...updatedList],
+        error: null,
+      };
+    }
 
     case WITHDRAWAL_PROCED_SUCCESS:
       return {
