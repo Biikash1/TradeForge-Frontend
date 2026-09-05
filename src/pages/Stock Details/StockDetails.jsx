@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import TradingForm from "./TradingForm";
 import StockChart from "../Home/StockChart";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchCoinDetails } from "@/State/Coin/ActionCoin";
 import {
@@ -28,27 +28,40 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import {
+  addItemToWatchlist,
+  getUserWatchlist,
+} from "@/State/Watchlist/ActionWatchlist";
+import { existInWatchlist } from "@/utils/existingWatchlist";
 
 const StockDetails = () => {
-  const { coinDetails, loading } = useSelector((store) => store.coin || {});
   const dispatch = useDispatch();
   const { id } = useParams();
-  const [isWatchlist, setIsWatchlist] = useState(false);
+
+  const { coinDetails } = useSelector((store) => store.coin || {});
+  const watchlistItems = useSelector((store) => store.watchlist?.items || []);
+
+  const rawJwt = localStorage.getItem("jwt");
+  const jwt = rawJwt?.startsWith("{") ? JSON.parse(rawJwt)?.jwt : rawJwt;
 
   useEffect(() => {
-    if (id) {
-      dispatch(
-        fetchCoinDetails({
-          coinId: id,
-          jwt: localStorage.getItem("jwt"),
-        })
-      );
+    if (jwt) {
+      dispatch(getUserWatchlist(jwt));
+      if (id) {
+        dispatch(fetchCoinDetails({ coinId: id, jwt }));
+      }
     }
   }, [dispatch, id]);
 
-  // Safe property extraction: handles both raw CoinGecko JSON and Spring Boot Coin Entity
-  const marketData = coinDetails?.market_data;
+  const targetCoinId = id || coinDetails?.id;
+  const isBookmarked = existInWatchlist(watchlistItems, { id: targetCoinId });
 
+  const handleToggleWatchlist = () => {
+    if (!targetCoinId || !jwt) return;
+    dispatch(addItemToWatchlist({ coinId: targetCoinId, jwt }));
+  };
+
+  const marketData = coinDetails?.market_data;
   const currentPrice = Number(
     marketData?.current_price?.usd ??
       coinDetails?.current_price ??
@@ -100,9 +113,7 @@ const StockDetails = () => {
       0
   );
 
-  const ath = Number(
-    marketData?.ath?.usd ?? coinDetails?.ath ?? 0
-  );
+  const ath = Number(marketData?.ath?.usd ?? coinDetails?.ath ?? 0);
 
   const circulatingSupply = Number(
     marketData?.circulating_supply ??
@@ -112,8 +123,9 @@ const StockDetails = () => {
   );
 
   const coinImage =
-    coinDetails?.image?.large ||
-    (typeof coinDetails?.image === "string" ? coinDetails?.image : "");
+    coinDetails?.image?.large ??
+    coinDetails?.image?.small ??
+    (typeof coinDetails?.image === "string" ? coinDetails.image : "");
 
   return (
     <div className="p-5 mt-2 max-w-7xl mx-auto text-slate-100 space-y-6">
@@ -121,9 +133,9 @@ const StockDetails = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-slate-800/60">
         <div className="flex gap-4 items-center">
           <Avatar className="h-12 w-12 border border-slate-800 bg-slate-900">
-            <AvatarImage src={coinImage} alt={coinDetails?.name || "Coin Logo"} />
-            <AvatarFallback className="bg-slate-800 text-xs">
-              {coinDetails?.symbol?.slice(0, 2)?.toUpperCase() || "CO"}
+            <AvatarImage src={coinImage} alt={coinDetails?.name || "Coin"} />
+            <AvatarFallback className="bg-slate-800 text-xs font-bold text-cyan-400">
+              {coinDetails?.symbol?.slice(0, 3)?.toUpperCase() || "CO"}
             </AvatarFallback>
           </Avatar>
 
@@ -137,7 +149,7 @@ const StockDetails = () => {
             </div>
 
             <div className="flex items-baseline gap-2 mt-0.5">
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-white font-mono">
                 ${currentPrice.toLocaleString()}
               </p>
               <div
@@ -163,12 +175,13 @@ const StockDetails = () => {
         {/* Action Controls */}
         <div className="flex items-center gap-3">
           <Button
+            onClick={handleToggleWatchlist}
             variant="outline"
             size="icon"
-            onClick={() => setIsWatchlist(!isWatchlist)}
             className="h-10 w-10 border-slate-800 bg-slate-900/60 text-slate-300 hover:text-white"
+            title={isBookmarked ? "Remove from Watchlist" : "Add to Watchlist"}
           >
-            {isWatchlist ? (
+            {isBookmarked ? (
               <BookmarkFilledIcon className="h-5 w-5 text-cyan-400" />
             ) : (
               <BookmarkIcon className="h-5 w-5" />
@@ -190,7 +203,7 @@ const StockDetails = () => {
                   How much do you want to spend?
                 </DialogTitle>
               </DialogHeader>
-              <TradingForm coin={coinDetails} />
+              <TradingForm />
             </DialogContent>
           </Dialog>
         </div>
@@ -201,7 +214,7 @@ const StockDetails = () => {
         <StockChart coinId={id} />
       </div>
 
-      {/* 3. Market Overview Grid (Fills Lower Blank Space) */}
+      {/* 3. Market Overview Grid */}
       <div className="space-y-3 pt-2">
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
           Market Metrics & Statistics

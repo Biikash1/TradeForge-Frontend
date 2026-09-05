@@ -6,6 +6,7 @@ import walletReducer from "./Wallet/WalletReducer";
 import withdrawalReducer from "./Withdrawal/WithdrawalReducer";
 import orderReducer from "./Order/OrderReducer";
 import assetReducer from "./Assets/AssetsReducer";
+import watchlistReducer from "./Watchlist/WatchlistReducer";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -14,6 +15,7 @@ const rootReducer = combineReducers({
   withdrawal: withdrawalReducer,
   order: orderReducer,
   asset: assetReducer,
+  watchlist: watchlistReducer,
 });
 
 export const store = legacy_createStore(
