@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import AssetTable from "./AssetTable";
 import StockChart from "./StockChart";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,17 +11,30 @@ import {
   ArrowDownRight,
   ExternalLink,
   Zap,
+  Loader2,
+  Send,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
 import { getCoinList } from "@/State/Coin/ActionCoin";
 import { useNavigate } from "react-router-dom";
+import { fetchBotResponse } from "@/services/chatService"; // Import the API function
 
 const Home = () => {
   const [category, setCategory] = useState("all");
   const [inputValue, setInputValue] = useState("");
   const [isBotRelease, setIsBotRelease] = useState(false);
   const [activeCoin, setActiveCoin] = useState(null);
+
+  // Bot State
+  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: "bot",
+      text: "Hello! Ask me any questions regarding prices, market volume, or cap trends.",
+    },
+  ]);
+  const chatBottomRef = useRef(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,9 +44,46 @@ const Home = () => {
   const handleCategory = (value) => setCategory(value);
   const handleChange = (e) => setInputValue(e.target.value);
 
+  // Auto-scroll chat to latest message
+  useEffect(() => {
+    if (isBotRelease) {
+      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading, isBotRelease]);
+
+  // Send message to backend
+  const handleSendMessage = async () => {
+    const prompt = inputValue.trim();
+    if (!prompt || loading) return;
+
+    // Add user message to UI immediately
+    setMessages((prev) => [...prev, { role: "user", text: prompt }]);
+    setInputValue("");
+    setLoading(true);
+
+    try {
+      const botReply = await fetchBotResponse(prompt);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: typeof botReply === "string" ? botReply : JSON.stringify(botReply) },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: "Sorry, I couldn't process that market request right now.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleKeyDown = (event) => {
-    if (event.key === "Enter" && inputValue.trim()) {
-      setInputValue("");
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -41,11 +91,8 @@ const Home = () => {
     dispatch(getCoinList(1));
   }, [dispatch]);
 
-  // Safe field accessors
   const getChangePercent = (item) =>
-    Number(
-      item?.price_change_percentage_24h ?? item?.priceChangePercentage24h ?? 0,
-    );
+    Number(item?.price_change_percentage_24h ?? item?.priceChangePercentage24h ?? 0);
 
   const getPrice = (item) =>
     Number(item?.current_price ?? item?.currentPrice ?? 0);
@@ -53,7 +100,6 @@ const Home = () => {
   const getPriceChange = (item) =>
     Number(item?.price_change_24h ?? item?.priceChange24h ?? 0);
 
-  // Dynamic filter for tabs
   const filteredCoins = useMemo(() => {
     if (!coinList || !Array.isArray(coinList)) return [];
 
@@ -62,20 +108,15 @@ const Home = () => {
       case "top50":
         return listCopy.slice(0, 50);
       case "topGainers":
-        return listCopy.sort(
-          (a, b) => getChangePercent(b) - getChangePercent(a),
-        );
+        return listCopy.sort((a, b) => getChangePercent(b) - getChangePercent(a));
       case "topLosers":
-        return listCopy.sort(
-          (a, b) => getChangePercent(a) - getChangePercent(b),
-        );
+        return listCopy.sort((a, b) => getChangePercent(a) - getChangePercent(b));
       case "all":
       default:
         return listCopy;
     }
   }, [coinList, category]);
 
-  // Keep active coin synchronized
   useEffect(() => {
     if (filteredCoins.length > 0) {
       const exists = filteredCoins.some((c) => c.id === activeCoin?.id);
@@ -89,15 +130,11 @@ const Home = () => {
   const isPositive = activePercentChange >= 0;
   const currentPrice = getPrice(activeCoin);
 
-  // Derive 24h High/Low indicators
   const high24h = Number(activeCoin?.high_24h ?? currentPrice * 1.025);
   const low24h = Number(activeCoin?.low_24h ?? currentPrice * 0.975);
   const rangeProgress =
     high24h !== low24h
-      ? Math.min(
-          Math.max(((currentPrice - low24h) / (high24h - low24h)) * 100, 0),
-          100,
-        )
+      ? Math.min(Math.max(((currentPrice - low24h) / (high24h - low24h)) * 100, 0), 100)
       : 50;
 
   return (
@@ -128,7 +165,6 @@ const Home = () => {
             ))}
           </div>
 
-          {/* Table Container with hidden system scrollbar */}
           <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-track]:bg-transparent">
             <AssetTable
               coin={filteredCoins}
@@ -138,17 +174,14 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Right Section: Chart + Rich Analytics Section */}
+        {/* Right Section: Chart + Metrics */}
         <div className="hidden lg:flex lg:w-1/2 p-5 flex-col gap-4 h-[calc(100vh-4rem)] overflow-y-auto bg-slate-950 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-800">
-          {/* Main Chart Box */}
           <div className="border border-slate-800/80 bg-slate-900/40 rounded-2xl p-4 shadow-xl shrink-0">
             <StockChart coinId={activeCoin?.id || "bitcoin"} />
           </div>
 
-          {/* Dynamic Asset Details & Analytics Deck */}
           {activeCoin ? (
             <div className="border border-slate-800/80 bg-slate-900/50 rounded-2xl p-5 shadow-lg flex flex-col gap-4 flex-1 justify-between">
-              {/* Header Title & Price */}
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border border-slate-700 bg-slate-800">
@@ -198,7 +231,6 @@ const Home = () => {
                 </Button>
               </div>
 
-              {/* 24h High/Low Slider Gauge */}
               <div className="space-y-1.5 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/60">
                 <div className="flex justify-between text-xs text-slate-400 font-medium">
                   <span>24h Low: ${low24h.toLocaleString()}</span>
@@ -213,7 +245,6 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* Fast Market Metrics Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
                 <div className="bg-slate-950/50 border border-slate-800/70 p-3 rounded-xl">
                   <p className="text-slate-500 text-[11px]">Market Cap</p>
@@ -253,12 +284,11 @@ const Home = () => {
       <section className="fixed bottom-5 right-5 z-40 flex flex-col justify-end items-end gap-2">
         {isBotRelease && (
           <div className="rounded-2xl w-[20rem] md:w-[24rem] h-[65vh] bg-slate-900 border border-slate-800 shadow-2xl flex flex-col overflow-hidden">
+            {/* Bot Header */}
             <div className="flex justify-between items-center border-b border-slate-800 px-5 py-3.5 bg-slate-950/60">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="font-semibold text-sm text-white">
-                  AI Market Bot
-                </p>
+                <p className="font-semibold text-sm text-white">AI Market Bot</p>
               </div>
               <Button
                 onClick={handleBotRelease}
@@ -270,45 +300,54 @@ const Home = () => {
               </Button>
             </div>
 
+            {/* Dynamic Message Feed */}
             <div className="flex-1 flex flex-col overflow-y-auto gap-3 p-4 text-xs">
-              <div className="self-start max-w-[85%] bg-slate-800/80 text-slate-200 p-3 rounded-xl border border-slate-700/50">
-                <p className="font-semibold text-cyan-400 mb-1">Trading Bot</p>
-                <p>
-                  Hello! Ask me any questions regarding prices, market volume,
-                  or cap trends.
-                </p>
-              </div>
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`max-w-[85%] p-3 rounded-xl ${
+                    msg.role === "user"
+                      ? "self-end bg-cyan-600 text-white rounded-br-none"
+                      : "self-start bg-slate-800/80 text-slate-200 border border-slate-700/50 rounded-bl-none"
+                  }`}
+                >
+                  {msg.role === "bot" && (
+                    <p className="font-semibold text-cyan-400 mb-1 text-[11px]">
+                      Trading Bot
+                    </p>
+                  )}
+                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                </div>
+              ))}
 
-              <div className="self-end max-w-[85%] bg-cyan-600 text-white p-3 rounded-xl">
-                <p>
-                  What is the current trend for {activeCoin?.name || "Bitcoin"}?
-                </p>
-              </div>
-
-              <div className="self-start max-w-[85%] bg-slate-800/80 text-slate-200 p-3 rounded-xl border border-slate-700/50">
-                <p>
-                  {activeCoin?.name || "Bitcoin"} is trading at $
-                  {getPrice(activeCoin).toLocaleString()}, moving{" "}
-                  <span
-                    className={
-                      isPositive ? "text-emerald-400" : "text-rose-400"
-                    }
-                  >
-                    {activePercentChange.toFixed(2)}%
-                  </span>{" "}
-                  over the last 24 hours.
-                </p>
-              </div>
+              {/* Loading Indicator */}
+              {loading && (
+                <div className="self-start max-w-[85%] bg-slate-800/80 text-slate-400 p-3 rounded-xl border border-slate-700/50 flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+                  <span>Fetching live data...</span>
+                </div>
+              )}
+              <div ref={chatBottomRef} />
             </div>
 
-            <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+            {/* Input Form */}
+            <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2">
               <Input
                 className="w-full bg-slate-900 border-slate-700 text-xs text-white placeholder:text-slate-500 focus-visible:ring-cyan-500"
-                placeholder="Ask about crypto..."
+                placeholder="Ask e.g. What is the price of BTC?"
                 onChange={handleChange}
                 value={inputValue}
                 onKeyDown={handleKeyDown}
+                disabled={loading}
               />
+              <Button
+                size="icon"
+                onClick={handleSendMessage}
+                disabled={loading || !inputValue.trim()}
+                className="h-9 w-9 bg-cyan-500 hover:bg-cyan-400 text-slate-950 shrink-0 disabled:opacity-40"
+              >
+                <Send size={14} />
+              </Button>
             </div>
           </div>
         )}
