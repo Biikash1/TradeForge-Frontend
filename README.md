@@ -24,9 +24,7 @@ Track live markets, place trades, manage your wallet, and top up with fiat, all 
 - [Architecture](#-architecture)
 - [Getting Started](#-getting-started)
 - [Configuration](#-configuration)
-- [Available Scripts](#-available-scripts)
 - [Project Structure](#-project-structure)
-- [Build & Deployment](#-build--deployment)
 - [Related Repositories](#-related-repositories)
 
 ---
