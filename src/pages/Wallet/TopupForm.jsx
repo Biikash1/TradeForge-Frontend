@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
-import razorpayImage from "@/assets/razorpayImages.png";
+import razorpayImage from "@/assets/razorpayImage.jpg";
 import stripeImages from "@/assets/stripeImage.png";
 import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";

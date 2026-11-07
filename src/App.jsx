@@ -11,10 +11,14 @@ import Watchlist from "./pages/Watchlist/Watchlist";
 import Profile from "./pages/Profile/Profile";
 import NotFound from "./pages/NotFound/NotFound";
 import Auth from "./pages/Auth/Auth";
+import SearchCoins from "./pages/Search/SearchCoins";
 import { Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getUser } from "./State/Authentication/Action";
+import { updateLivePrices } from "./State/Coin/ActionCoin";
+import { connectWebSocket, disconnectWebSocket } from "./config/websocket";
+
 
 function App() {
   const { auth } = useSelector((store) => store);
@@ -35,6 +39,17 @@ function App() {
     }
   }, [token, dispatch]);
 
+  //Connect to WebSocket globally
+  useEffect(() => {
+    connectWebSocket((liveprices) => {
+      dispatch(updateLivePrices(liveprices));
+    });
+
+    return () => {
+      disconnectWebSocket();
+    };
+  }, [dispatch]);
+
   return (
     <>
       <Toaster position="top-center" richColors />
@@ -51,6 +66,7 @@ function App() {
             <Route path="/market/:id" element={<StockDetails />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/search" element={<SearchCoins />} />
             <Route path="/*" element={<NotFound />} />
           </Routes>
         </div>

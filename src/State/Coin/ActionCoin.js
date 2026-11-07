@@ -18,6 +18,7 @@ import {
   SEARCH_COIN_FAILURE,
   SEARCH_COIN_REQUEST,
   SEARCH_COIN_SUCCESS,
+  UPDATE_LIVE_PRICES
 } from "./CoinActionType";
 
 export const getCoinList = (page = 1) => async (dispatch) => {
@@ -106,3 +107,8 @@ export const searchCoin = (keyword) => async (dispatch) => {
     dispatch({ type: SEARCH_COIN_FAILURE, payload: errorMsg });
   }
 };
+
+export const updateLivePrices = (prices) => ({
+  type: UPDATE_LIVE_PRICES,
+  payload: prices
+});

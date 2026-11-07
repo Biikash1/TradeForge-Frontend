@@ -1,5 +1,5 @@
 import "./Auth.css";
-import loginPage from "@/assets/loginPage.png";
+import loginPage from "@/assets/loginPage.jpg";
 import SignupForm from "./SignupForm";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";

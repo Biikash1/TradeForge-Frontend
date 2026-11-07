@@ -17,6 +17,7 @@ import {
   SEARCH_COIN_FAILURE,
   SEARCH_COIN_REQUEST,
   SEARCH_COIN_SUCCESS,
+  UPDATE_LIVE_PRICES
 } from "./CoinActionType";
 
 const initialState = {
@@ -95,6 +96,31 @@ const coinReducer = (state = initialState, action) => {
         loading: false,
         error: null,
       };
+
+    case UPDATE_LIVE_PRICES: {
+      const liveCoins = action.payload;
+      
+      // Update coinList with live data
+      const updatedCoinList = state.coinList.map((existingCoin) => {
+        const liveMatch = liveCoins.find((lc) => lc.id === existingCoin.id);
+        return liveMatch ? { ...existingCoin, ...liveMatch } : existingCoin;
+      });
+
+      // Update active coin details if currently viewing one
+      let updatedCoinDetails = state.coinDetails;
+      if (state.coinDetails) {
+         const liveMatch = liveCoins.find((lc) => lc.id === state.coinDetails.id);
+         if (liveMatch) {
+             updatedCoinDetails = { ...state.coinDetails, ...liveMatch };
+         }
+      }
+
+      return {
+        ...state,
+        coinList: updatedCoinList.length > 0 ? updatedCoinList : liveCoins,
+        coinDetails: updatedCoinDetails
+      };
+    }
 
     case FETCH_MARKET_CHART_FAILURE:
       return {
