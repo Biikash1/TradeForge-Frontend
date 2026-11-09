@@ -8,12 +8,14 @@ import { useNavigate } from "react-router-dom";
 import { getUserWallet } from "@/State/Wallet/ActionWallet";
 import { getAssetDetails } from "@/State/Assets/ActionAssets";
 import { payOrder } from "@/State/Order/ActionOrder";
+import OrderConfirmationModal from "./OrderConfirmationModal";
 
 const TradingForm = () => {
   const [orderType, setOrderType] = useState("BUY");
   const [amount, setAmount] = useState("");
   const [quantity, setQuantity] = useState("0");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,13 +24,11 @@ const TradingForm = () => {
   const userWallet = useSelector((store) => store.wallet?.userWallet);
   const assetDetails = useSelector((store) => store.asset?.assetDetails);
 
-  // Fallback checks covering both backend DB entities and CoinGecko API responses
   const currentPrice =
     coinDetails?.market_data?.current_price?.usd ??
     coinDetails?.current_price ??
     0;
 
-  // Defensive fallback lookup for coin images across nested objects & plain strings
   const coinImage =
     (typeof coinDetails?.image === "string" ? coinDetails.image : null) ||
     coinDetails?.image?.large ||
@@ -49,7 +49,6 @@ const TradingForm = () => {
 
   const isPositive = Number(priceChangePercentage) >= 0;
 
-  // Calculates crypto units based on USD amount entered
   const calculateVolume = (val, price) => {
     const numericVal = parseFloat(val);
     const numericPrice = parseFloat(price);
@@ -86,9 +85,13 @@ const TradingForm = () => {
     }
   }, [dispatch, coinDetails?.id]);
 
-  const handleExecuteOrder = async () => {
-    if (!amount || Number(amount) <= 0 || parseFloat(quantity) <= 0) return;
+  const handleReviewOrder = () => {
+    if(!amount || Number(amount) <= 0 || parseFloat(quantity) <= 0) return;
+    setIsModalOpen(true);
+  }
 
+  const handleExecuteOrder = async () => {
+    setIsModalOpen(false);
     const rawJwt = localStorage.getItem("jwt");
     const jwt = rawJwt?.startsWith("{") ? JSON.parse(rawJwt)?.jwt : rawJwt;
 
@@ -153,7 +156,6 @@ const TradingForm = () => {
         )}
       </div>
 
-      {/* Dynamic Coin Header Details with AvatarFallback */}
       <div className="flex gap-4 items-center p-3 rounded-xl bg-slate-900/60 border border-slate-800">
         <Avatar className="h-10 w-10 border border-slate-700 bg-slate-800 flex items-center justify-center shrink-0">
           <AvatarImage
@@ -216,7 +218,7 @@ const TradingForm = () => {
 
       <div>
         <Button
-          onClick={handleExecuteOrder}
+          onClick={handleReviewOrder}
           disabled={
             !amount ||
             Number(amount) <= 0 ||
@@ -233,7 +235,7 @@ const TradingForm = () => {
         >
           {isSubmitting
             ? "Processing..."
-            : `${orderType} ${coinDetails?.symbol?.toUpperCase() || ""}`}
+            : `Review ${orderType} Order`}
         </Button>
 
         <Button
@@ -248,6 +250,19 @@ const TradingForm = () => {
           Switch to {orderType === "BUY" ? "SELL" : "BUY"}
         </Button>
       </div>
+
+      <OrderConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleExecuteOrder}
+        orderDetails={{
+          coinId: coinDetails?.id,
+          symbol: coinDetails?.symbol || "",
+          quantity: quantity,
+          amount: amount,
+          orderType: orderType,
+        }}
+      />
     </div>
   );
 };
