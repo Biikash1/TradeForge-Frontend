@@ -23,7 +23,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect to /signin on an explicit 401 Unauthorized response
+
+    // 1. Handle Rate Limiting (429) globally
+    if (error.response && error.response.status === 429) {
+      console.warn("Rate limit exceeded:", error.response.data?.message);
+      // The error will be rejected and naturally picked up by your Redux thunks or catch blocks,
+      // which will display the backend's "Please try again in X seconds" message.
+    }
+
+    // 2. Handle Unauthorized (401)
     if (error.response && error.response.status === 401) {
       localStorage.removeItem("jwt");
       window.location.href = "/signin";
