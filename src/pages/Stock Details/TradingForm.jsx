@@ -12,8 +12,11 @@ import OrderConfirmationModal from "./OrderConfirmationModal";
 
 const TradingForm = () => {
   const [orderType, setOrderType] = useState("BUY");
+  const [orderCategory, setOrderCategory] = useState("MARKET"); // MARKET, LIMIT, STOP_LOSS
   const [amount, setAmount] = useState("");
   const [quantity, setQuantity] = useState("0");
+  const [targetPrice, setTargetPrice] = useState("");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -49,17 +52,14 @@ const TradingForm = () => {
 
   const isPositive = Number(priceChangePercentage) >= 0;
 
+  // Uses Target Price for advanced orders, Current Price for market orders
+  const activePrice = orderCategory === "MARKET" ? currentPrice : (Number(targetPrice) || 0);
+
   const calculateVolume = (val, price) => {
     const numericVal = parseFloat(val);
     const numericPrice = parseFloat(price);
 
-    if (
-      !numericVal ||
-      isNaN(numericVal) ||
-      !numericPrice ||
-      isNaN(numericPrice) ||
-      numericPrice <= 0
-    ) {
+    if (!numericVal || isNaN(numericVal) || !numericPrice || isNaN(numericPrice) || numericPrice <= 0) {
       return "0";
     }
 
@@ -67,11 +67,27 @@ const TradingForm = () => {
     return volume >= 1 ? volume.toFixed(4) : volume.toFixed(6);
   };
 
-  const handleChange = (e) => {
+  const handleAmountChange = (e) => {
     const val = e.target.value;
     setAmount(val);
-    setQuantity(calculateVolume(val, currentPrice));
+    setQuantity(calculateVolume(val, activePrice));
   };
+
+  const handleTargetPriceChange = (e) => {
+    const val = e.target.value;
+    setTargetPrice(val);
+    setQuantity(calculateVolume(amount, val));
+  };
+
+  // Recalculate if category switches back to MARKET
+  useEffect(() => {
+    if (orderCategory === "MARKET") {
+      setTargetPrice("");
+      setQuantity(calculateVolume(amount, currentPrice));
+    } else {
+      setQuantity(calculateVolume(amount, targetPrice));
+    }
+  }, [orderCategory, currentPrice]);
 
   useEffect(() => {
     const rawJwt = localStorage.getItem("jwt");
@@ -86,9 +102,10 @@ const TradingForm = () => {
   }, [dispatch, coinDetails?.id]);
 
   const handleReviewOrder = () => {
-    if(!amount || Number(amount) <= 0 || parseFloat(quantity) <= 0) return;
+    if (!amount || Number(amount) <= 0 || parseFloat(quantity) <= 0) return;
+    if (orderCategory !== "MARKET" && (!targetPrice || Number(targetPrice) <= 0)) return;
     setIsModalOpen(true);
-  }
+  };
 
   const handleExecuteOrder = async () => {
     setIsModalOpen(false);
@@ -97,13 +114,18 @@ const TradingForm = () => {
 
     setIsSubmitting(true);
 
+    let finalOrderType = orderType;
+    if (orderCategory === "LIMIT") finalOrderType = `LIMIT_${orderType}`;
+    if (orderCategory === "STOP_LOSS") finalOrderType = `STOP_LOSS_${orderType}`;
+
     const success = await dispatch(
       payOrder({
         jwt,
         orderData: {
           coinId: coinDetails?.id,
           quantity: parseFloat(quantity),
-          orderType,
+          orderType: finalOrderType,
+          ...(orderCategory !== "MARKET" && { targetPrice: parseFloat(targetPrice) })
         },
       })
     );
@@ -111,36 +133,69 @@ const TradingForm = () => {
     setIsSubmitting(false);
 
     if (success) {
-      navigate("/portfolio");
+      navigate(orderCategory === "MARKET" ? "/portfolio" : "/activity");
     }
   };
 
   const availableCash = userWallet?.balance ?? 0;
   const availableQuantity = assetDetails?.quantity ?? 0;
 
-  const isInsufficientBuy =
-    orderType === "BUY" && Number(amount) > Number(availableCash);
-  const isInsufficientSell =
-    orderType === "SELL" && parseFloat(quantity) > parseFloat(availableQuantity);
+  const isInsufficientBuy = orderType === "BUY" && Number(amount) > Number(availableCash);
+  const isInsufficientSell = orderType === "SELL" && parseFloat(quantity) > parseFloat(availableQuantity);
 
   return (
     <div className="space-y-6 p-5 text-slate-100">
-      <div>
-        <div className="flex gap-4 items-center justify-between">
-          <Input
-            className="py-6 bg-slate-900 border-slate-800 text-white font-medium focus-visible:ring-cyan-500"
-            placeholder="Enter Amount ($)..."
-            onChange={handleChange}
-            value={amount}
-            type="number"
-            min="0"
-            step="any"
-            name="amount"
-          />
-          <div>
-            <p className="border border-slate-800 bg-slate-900 text-lg font-mono flex justify-center items-center w-36 h-12 rounded-xl text-cyan-400">
-              {quantity}
-            </p>
+      
+      {/* Category Toggle (MARKET / LIMIT / STOP) */}
+      <div className="flex gap-2 text-xs">
+        {["MARKET", "LIMIT", "STOP_LOSS"].map((cat) => (
+          <button
+            key={cat}
+            type="button"
+            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
+              orderCategory === cat ? "bg-cyan-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+            }`}
+            onClick={() => setOrderCategory(cat)}
+          >
+            {cat.replace("_", " ")}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {/* Conditional Target Price Input */}
+        {orderCategory !== "MARKET" && (
+          <div className="space-y-1.5">
+            <label className="text-xs text-slate-400 font-medium ml-1">Target Price (USD)</label>
+            <Input
+              className="py-5 bg-slate-900 border-slate-800 text-white font-medium focus-visible:ring-cyan-500"
+              placeholder={`Current Price: $${currentPrice}`}
+              onChange={handleTargetPriceChange}
+              value={targetPrice}
+              type="number"
+              min="0"
+              step="any"
+            />
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <label className="text-xs text-slate-400 font-medium ml-1">Investment Amount (USD)</label>
+          <div className="flex gap-4 items-center justify-between">
+            <Input
+              className="py-5 bg-slate-900 border-slate-800 text-white font-medium focus-visible:ring-cyan-500"
+              placeholder="Enter Amount ($)..."
+              onChange={handleAmountChange}
+              value={amount}
+              type="number"
+              min="0"
+              step="any"
+            />
+            <div>
+              <p className="border border-slate-800 bg-slate-900 text-sm font-mono flex justify-center items-center w-36 h-10 rounded-xl text-cyan-400 overflow-hidden px-2 truncate">
+                {quantity} {coinDetails?.symbol?.toUpperCase()}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -158,42 +213,27 @@ const TradingForm = () => {
 
       <div className="flex gap-4 items-center p-3 rounded-xl bg-slate-900/60 border border-slate-800">
         <Avatar className="h-10 w-10 border border-slate-700 bg-slate-800 flex items-center justify-center shrink-0">
-          <AvatarImage
-            src={coinImage}
-            alt={coinDetails?.name || "Coin"}
-            className="object-contain p-0.5"
-          />
+          <AvatarImage src={coinImage} alt={coinDetails?.name || "Coin"} className="object-contain p-0.5" />
           <AvatarFallback className="bg-slate-800 text-xs font-bold text-cyan-400">
             {coinDetails?.symbol?.slice(0, 3)?.toUpperCase() || "CRY"}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="font-semibold text-white uppercase">
-              {coinDetails?.symbol || "BTC"}
-            </p>
+            <p className="font-semibold text-white uppercase">{coinDetails?.symbol || "BTC"}</p>
             <DotIcon className="text-slate-500" />
-            <p className="text-xs text-slate-400 truncate">
-              {coinDetails?.name || "Bitcoin"}
-            </p>
+            <p className="text-xs text-slate-400 truncate">{coinDetails?.name || "Bitcoin"}</p>
           </div>
           <div className="flex items-baseline gap-2 mt-0.5">
             <p className="text-base font-bold text-white font-mono">
               ${Number(currentPrice).toLocaleString()}
             </p>
-            <p
-              className={`text-xs font-semibold ${
-                isPositive ? "text-emerald-400" : "text-rose-500"
-              }`}
-            >
+            <p className={`text-xs font-semibold ${isPositive ? "text-emerald-400" : "text-rose-500"}`}>
               <span>
-                {isPositive
-                  ? `+$${Number(priceChangeAmount).toFixed(2)}`
-                  : `-$${Math.abs(Number(priceChangeAmount)).toFixed(2)}`}
+                {isPositive ? `+$${Number(priceChangeAmount).toFixed(2)}` : `-$${Math.abs(Number(priceChangeAmount)).toFixed(2)}`}
               </span>
               <span className="ml-1">
-                ({isPositive ? "+" : ""}
-                {Number(priceChangePercentage).toFixed(2)}%)
+                ({isPositive ? "+" : ""}{Number(priceChangePercentage).toFixed(2)}%)
               </span>
             </p>
           </div>
@@ -202,13 +242,13 @@ const TradingForm = () => {
 
       <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/80 pb-2">
         <span>Order Type</span>
-        <span className="font-medium text-slate-200">Market Order</span>
+        <span className="font-medium text-slate-200">
+          {orderCategory.replace("_", " ")} {orderType}
+        </span>
       </div>
 
       <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/80 pb-2">
-        <span>
-          {orderType === "BUY" ? "Available Cash" : "Available Holdings"}
-        </span>
+        <span>{orderType === "BUY" ? "Available Cash" : "Available Holdings"}</span>
         <span className="font-mono font-medium text-slate-200">
           {orderType === "BUY"
             ? `$${Number(availableCash).toFixed(2)}`
@@ -223,6 +263,7 @@ const TradingForm = () => {
             !amount ||
             Number(amount) <= 0 ||
             parseFloat(quantity) <= 0 ||
+            (orderCategory !== "MARKET" && (!targetPrice || Number(targetPrice) <= 0)) ||
             isInsufficientBuy ||
             isInsufficientSell ||
             isSubmitting
@@ -233,9 +274,7 @@ const TradingForm = () => {
               : "bg-emerald-600 hover:bg-emerald-500 text-white"
           } disabled:opacity-50`}
         >
-          {isSubmitting
-            ? "Processing..."
-            : `Review ${orderType} Order`}
+          {isSubmitting ? "Processing..." : `Review ${orderCategory.replace("_", " ")} ${orderType}`}
         </Button>
 
         <Button
@@ -244,6 +283,7 @@ const TradingForm = () => {
           onClick={() => {
             setOrderType(orderType === "BUY" ? "SELL" : "BUY");
             setAmount("");
+            setTargetPrice("");
             setQuantity("0");
           }}
         >
@@ -260,6 +300,8 @@ const TradingForm = () => {
           symbol: coinDetails?.symbol || "",
           quantity: quantity,
           amount: amount,
+          targetPrice: targetPrice,
+          orderCategory: orderCategory,
           orderType: orderType,
         }}
       />

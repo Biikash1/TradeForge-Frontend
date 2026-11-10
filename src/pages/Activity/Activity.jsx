@@ -43,9 +43,17 @@ const Activity = () => {
     }
   }, [dispatch]);
 
+  const getStatusBadge = (status) => {
+    const s = status?.toUpperCase();
+    if (s === "FILLED" || s === "SUCCESS") return "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
+    if (s === "PENDING") return "text-amber-400 bg-amber-500/10 border-amber-500/30";
+    if (s === "CANCELLED" || s === "ERROR") return "text-rose-400 bg-rose-500/10 border-rose-500/30";
+    return "text-slate-400 bg-slate-500/10 border-slate-500/30";
+  };
+
   return (
     <div className="p-5 lg:p-20 text-slate-100 max-w-7xl mx-auto">
-      <h1 className="font-bold text-3xl pb-5 tracking-tight text-white">Activity</h1>
+      <h1 className="font-bold text-3xl pb-5 tracking-tight text-white">Order History</h1>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-xl">
         <Table>
@@ -53,10 +61,11 @@ const Activity = () => {
             <TableRow>
               <TableHead className="py-4 text-slate-400">DATE & TIME</TableHead>
               <TableHead className="text-slate-400">TRADING PAIR</TableHead>
-              <TableHead className="text-slate-400">BUY PRICE</TableHead>
-              <TableHead className="text-slate-400">SELLING PRICE</TableHead>
               <TableHead className="text-slate-400">ORDER TYPE</TableHead>
+              <TableHead className="text-slate-400">BUY / TARGET</TableHead>
+              <TableHead className="text-slate-400">SELL PRICE</TableHead>
               <TableHead className="text-slate-400">PROFIT/LOSS</TableHead>
+              <TableHead className="text-slate-400">STATUS</TableHead>
               <TableHead className="text-right text-slate-400">VALUE</TableHead>
             </TableRow>
           </TableHeader>
@@ -67,6 +76,13 @@ const Activity = () => {
                 const profitStr = calculateProfit(item);
                 const isProfit = profitStr.startsWith("+");
                 const isLoss = profitStr.startsWith("-");
+                
+                const isBuy = item.orderType.includes("BUY");
+                const displayType = item.orderType.replace(/_/g, " ");
+
+                // If PENDING, show the target price they set instead of actual buy/sell execution prices
+                const isPending = item.status === "PENDING";
+                const displayBuyPrice = isPending ? item.targetPrice : item.orderItem?.buyPrice;
 
                 return (
                   <TableRow
@@ -94,32 +110,38 @@ const Activity = () => {
                       </div>
                     </TableCell>
 
-                    <TableCell className="font-mono text-slate-200">
-                      {item.orderItem?.buyPrice ? `$${Number(item.orderItem.buyPrice).toLocaleString()}` : "-"}
-                    </TableCell>
-
-                    <TableCell className="font-mono text-slate-200">
-                      {item.orderItem?.sellPrice ? `$${Number(item.orderItem.sellPrice).toLocaleString()}` : "-"}
-                    </TableCell>
-
                     <TableCell>
                       <span
-                        className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                          item.orderType === "BUY"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        className={`text-[10px] font-bold tracking-wider px-2 py-1 rounded border uppercase ${
+                          isBuy
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                         }`}
                       >
-                        {item.orderType}
+                        {displayType}
                       </span>
                     </TableCell>
 
+                    <TableCell className="font-mono text-slate-200 text-xs">
+                      {displayBuyPrice ? `$${Number(displayBuyPrice).toLocaleString()}` : "-"}
+                    </TableCell>
+
+                    <TableCell className="font-mono text-slate-200 text-xs">
+                      {!isPending && item.orderItem?.sellPrice ? `$${Number(item.orderItem.sellPrice).toLocaleString()}` : "-"}
+                    </TableCell>
+
                     <TableCell
-                      className={`font-mono font-medium ${
+                      className={`font-mono font-medium text-xs ${
                         isProfit ? "text-emerald-400" : isLoss ? "text-rose-500" : "text-slate-400"
                       }`}
                     >
-                      {profitStr}
+                      {!isPending ? profitStr : "-"}
+                    </TableCell>
+
+                    <TableCell>
+                       <span className={`px-2 py-1 text-[10px] font-bold border rounded-full uppercase tracking-wider ${getStatusBadge(item.status)}`}>
+                         {item.status || "UNKNOWN"}
+                       </span>
                     </TableCell>
 
                     <TableCell className="text-right font-mono font-bold text-slate-100">
@@ -130,7 +152,7 @@ const Activity = () => {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-slate-400 text-sm">
+                <TableCell colSpan={8} className="text-center py-12 text-slate-400 text-sm">
                   No order activity recorded yet.
                 </TableCell>
               </TableRow>

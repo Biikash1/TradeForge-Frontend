@@ -10,11 +10,16 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderDetails }) =>
     if (isOpen) {
       setIsLoading(true);
       setInsight("");
-      // Fetch AI Insight when the modal opens
+      
+      // Pass the combined Enum string (e.g. LIMIT_BUY) to the insight bot
+      const fullOrderType = orderDetails.orderCategory === "MARKET" 
+        ? orderDetails.orderType 
+        : `${orderDetails.orderCategory}_${orderDetails.orderType}`;
+
       fetchPreTradeInsight(
         orderDetails.coinId,
         orderDetails.quantity,
-        orderDetails.orderType
+        fullOrderType
       )
         .then((data) => {
           setInsight(data);
@@ -32,17 +37,18 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderDetails }) =>
 
   if (!isOpen) return null;
 
+  const isAdvancedOrder = orderDetails.orderCategory !== "MARKET";
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative z-[70]">
         <h2 className="text-xl font-bold text-white mb-4">Review Order</h2>
 
-        {/* Order Summary Section */}
         <div className="bg-slate-950/60 rounded-xl p-4 mb-4 flex justify-between items-center border border-slate-800">
           <div>
             <p className="text-slate-400 text-sm">Action</p>
-            <p className="text-white font-semibold text-lg">
-              {orderDetails.orderType === "BUY" ? "Buy" : "Sell"}{" "}
+            <p className="text-white font-semibold text-lg capitalize">
+              {orderDetails.orderCategory.replace("_", " ")} {orderDetails.orderType === "BUY" ? "Buy" : "Sell"}{" "}
               {orderDetails.symbol.toUpperCase()}
             </p>
           </div>
@@ -54,12 +60,18 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderDetails }) =>
           </div>
         </div>
         
-        <div className="flex justify-between items-center mb-6 px-1">
-            <span className="text-sm text-slate-400">Total Value</span>
+        {isAdvancedOrder && (
+          <div className="flex justify-between items-center mb-2 px-1">
+            <span className="text-sm text-slate-400">Target Price Execution</span>
+            <span className="font-bold text-emerald-400">${orderDetails.targetPrice}</span>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center mb-6 px-1 border-t border-slate-800/80 pt-2">
+            <span className="text-sm text-slate-400">Total Investment Value</span>
             <span className="font-bold text-slate-100">${orderDetails.amount}</span>
         </div>
 
-        {/* AI Pre-Trade Insight Section */}
         <div className="relative overflow-hidden rounded-xl border border-indigo-500/30 bg-indigo-900/10 p-5 mb-6">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-indigo-400" />
@@ -79,7 +91,6 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderDetails }) =>
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -97,7 +108,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderDetails }) =>
                 <Loader2 className="w-4 h-4 animate-spin" /> Processing
               </span>
             ) : (
-              "Confirm Trade"
+              isAdvancedOrder ? "Place Order" : "Confirm Trade"
             )}
           </button>
         </div>
