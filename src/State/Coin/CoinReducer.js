@@ -98,7 +98,10 @@ const coinReducer = (state = initialState, action) => {
       };
 
     case UPDATE_LIVE_PRICES: {
-      const liveCoins = action.payload;
+      const liveData = action.payload;
+
+      // Normalize to array whether it's an aggregate broadcast or single coin broadcast
+      const liveCoins = Array.isArray(liveData) ? liveData : [liveData];
       
       // Update coinList with live data
       const updatedCoinList = state.coinList.map((existingCoin) => {

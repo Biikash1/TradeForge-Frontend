@@ -41,14 +41,12 @@ function App() {
 
   //Connect to WebSocket globally
   useEffect(() => {
-    connectWebSocket((liveprices) => {
-      dispatch(updateLivePrices(liveprices));
-    });
+    connectWebSocket();
 
     return () => {
       disconnectWebSocket();
     };
-  }, [dispatch]);
+  }, [])
 
   return (
     <>

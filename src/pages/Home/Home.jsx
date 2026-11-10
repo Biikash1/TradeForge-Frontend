@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useDispatch, useSelector } from "react-redux";
-import { getCoinList } from "@/State/Coin/ActionCoin";
+import { getCoinList, updateLivePrices } from "@/State/Coin/ActionCoin";
 import { useNavigate } from "react-router-dom";
-import { fetchBotResponse } from "@/services/chatService"; // Import the API function
+import { fetchBotResponse } from "@/services/chatService";
+import { subscribeToChannel, unsubscribeFromChannel } from "@/config/websocket";
 
 const Home = () => {
   const [category, setCategory] = useState("all");
@@ -87,8 +88,20 @@ const Home = () => {
     }
   };
 
+  // Fetch initial list and subscribe to global price updates
   useEffect(() => {
     dispatch(getCoinList(1));
+    
+    // Subscribe to global channel on mount
+    const channel = "/topic/public/prices";
+    subscribeToChannel(channel, (livePrices) => {
+      dispatch(updateLivePrices(livePrices));
+    });
+
+    // Clean up on unmount
+    return () => {
+      unsubscribeFromChannel(channel);
+    };
   }, [dispatch]);
 
   const getChangePercent = (item) =>

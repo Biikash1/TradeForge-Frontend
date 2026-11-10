@@ -17,7 +17,8 @@ import StockChart from "../Home/StockChart";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { fetchCoinDetails } from "@/State/Coin/ActionCoin";
+import { fetchCoinDetails, updateLivePrices } from "@/State/Coin/ActionCoin";
+import { subscribeToChannel, unsubscribeFromChannel } from "@/config/websocket";
 import {
   DollarSign,
   BarChart2,
@@ -49,9 +50,19 @@ const StockDetails = () => {
       dispatch(getUserWatchlist(jwt));
       if (id) {
         dispatch(fetchCoinDetails({ coinId: id, jwt }));
+        
+        // Subscribe ONLY to this specific coin's channel
+        const channel = `/topic/price/${id}`;
+        subscribeToChannel(channel, (livePrice) => {
+          dispatch(updateLivePrices(livePrice));
+        });
+
+        return () => {
+          unsubscribeFromChannel(channel);
+        };
       }
     }
-  }, [dispatch, id]);
+  }, [dispatch, id, jwt]);
 
   const targetCoinId = id || coinDetails?.id;
   const isBookmarked = existInWatchlist(watchlistItems, { id: targetCoinId });
