@@ -4,6 +4,7 @@ const initialState = {
   loading: false,
   error: null,
   transactions: [],
+  transactionsPageDetails: null,
 };
 
 const walletReducer = (state = initialState, action) => {
@@ -21,7 +22,8 @@ const walletReducer = (state = initialState, action) => {
     case types.GET_WALLET_TRANSACTION_SUCCESS:
       return {
         ...state,
-        transactions: action.payload,
+        transactions: action.payload?.content || (Array.isArray(action.payload) ? action.payload : []),
+        transactionsPageDetails: action.payload?.pageable ? action.payload : null,
         loading: false,
         error: null,
       };

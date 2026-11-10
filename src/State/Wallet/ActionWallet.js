@@ -29,7 +29,7 @@ export const getUserWallet = (jwt) => async (dispatch) => {
 
 // --- GET WALLET TRANSACTIONS ---
 export const getWalletTransactions =
-  ({ jwt }) =>
+  ({ jwt, page = 0, size = 10 }) =>
   async (dispatch) => {
     dispatch({ type: types.GET_WALLET_TRANSACTION_REQUEST });
 
@@ -37,6 +37,10 @@ export const getWalletTransactions =
       const response = await api.get("/api/wallet/transaction", {
         headers: {
           Authorization: `Bearer ${jwt}`,
+        },
+        params: {
+          page,
+          size
         },
       });
 

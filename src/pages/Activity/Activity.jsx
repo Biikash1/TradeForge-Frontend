@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
@@ -11,6 +11,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getAllOrderForUser } from "@/State/Order/ActionOrder";
 import calculateProfit from "@/utils/calculateProfit";
+import { Button } from "@/components/ui/button";
 
 const getCleanJwt = () => {
   const token = localStorage.getItem("jwt");
@@ -34,14 +35,21 @@ const formatDate = (timestamp) => {
 
 const Activity = () => {
   const dispatch = useDispatch();
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
+  
   const orders = useSelector((store) => store.order?.orders || []);
+  const pageDetails = useSelector((store) => store.order?.ordersPageDetails);
+  
+  // Calculate total pages safely
+  const totalPages = pageDetails?.totalPages || 1;
 
   useEffect(() => {
     const jwt = getCleanJwt();
     if (jwt) {
-      dispatch(getAllOrderForUser({ jwt }));
+      dispatch(getAllOrderForUser({ jwt, page, size: pageSize }));
     }
-  }, [dispatch]);
+  }, [dispatch, page]); // Re-run when page changes
 
   const getStatusBadge = (status) => {
     const s = status?.toUpperCase();
@@ -159,6 +167,31 @@ const Activity = () => {
             )}
           </TableBody>
         </Table>
+        
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/80 bg-slate-900/80">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+            className="border-slate-700 text-slate-300 hover:text-white"
+          >
+            Previous
+          </Button>
+          <span className="text-sm font-medium text-slate-400">
+            Page {page + 1} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+            className="border-slate-700 text-slate-300 hover:text-white"
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

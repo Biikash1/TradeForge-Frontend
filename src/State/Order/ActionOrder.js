@@ -72,7 +72,7 @@ export const getOrderById =
   };
 
 export const getAllOrderForUser =
-  ({ jwt, orderType, assetSymbol }) =>
+  ({ jwt, orderType, assetSymbol , page = 0, size = 20}) =>
   async (dispatch) => {
     dispatch({ type: types.GET_ALL_ORDERS_REQUEST });
 
@@ -84,6 +84,8 @@ export const getAllOrderForUser =
         params: {
           orderType: orderType || undefined,
           assetSymbol: assetSymbol || undefined,
+          page,
+          size
         },
       });
 

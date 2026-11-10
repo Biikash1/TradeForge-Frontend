@@ -13,6 +13,7 @@ import {
 const initialState = {
   order: null,
   orders: [],
+  ordersPageDetails: null,
   loading: false,
   error: null,
 };
@@ -48,7 +49,9 @@ const orderReducer = (state = initialState, action) => {
     case GET_ALL_ORDERS_SUCCESS:
       return {
         ...state,
-        orders: Array.isArray(action.payload) ? action.payload : [],
+        // Extract 'content' if it exists (paginated), else fallback to array
+        orders:  action.payload?.content || (Array.isArray(action.payload) ? action.payload : []),
+        ordersPageDetails: action.payload?.pageable ? action.payload : null,
         loading: false, // Fixed: was previously true
         error: null,
       };

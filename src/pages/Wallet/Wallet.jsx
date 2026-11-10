@@ -25,7 +25,8 @@ import {
   depositMoney,
 } from "@/State/Wallet/ActionWallet";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -36,9 +37,15 @@ const Wallet = () => {
   const navigate = useNavigate();
   const hasDeposited = useRef(false);
 
-const wallet = useSelector((store) => store.wallet);
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
+
+  const wallet = useSelector((store) => store.wallet);
   const userWallet = wallet?.userWallet;
+  
   const transactions = wallet?.transactions || [];
+  const pageDetails = wallet?.transactionsPageDetails;
+  const totalPages = pageDetails?.totalPages || 1;
 
   const query = useQuery();
 
@@ -60,14 +67,18 @@ const wallet = useSelector((store) => store.wallet);
 
   const handleFetchWalletTransaction = () => {
     const jwt = localStorage.getItem("jwt");
-    if (jwt) dispatch(getWalletTransactions({ jwt }));
+    if (jwt) dispatch(getWalletTransactions({ jwt, page, size: pageSize }));
   };
 
   // Initial load of wallet data
   useEffect(() => {
     handleFetchUserWallet();
-    handleFetchWalletTransaction();
   }, [dispatch]);
+
+  // Handle transaction fetching with pagination dependency
+  useEffect(() => {
+    handleFetchWalletTransaction();
+  }, [dispatch, page]);
 
   // Handle payment gateway return and credit wallet
   useEffect(() => {
@@ -263,6 +274,33 @@ const wallet = useSelector((store) => store.wallet);
               </div>
             )}
           </div>
+          
+          {/* Pagination Controls */}
+          {transactions.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:bg-slate-800"
+              >
+                Previous
+              </Button>
+              <span className="text-xs font-medium text-slate-500">
+                Page {page + 1} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                className="border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:bg-slate-800"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
