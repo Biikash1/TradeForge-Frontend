@@ -86,8 +86,15 @@ export const getUser = () => async (dispatch) => {
   }
 };
 
-export const logout = () => (dispatch) => {
-  localStorage.clear();
-  dispatch({ type: LOGOUT });
-  toast.success("Logged out successfully!");
+export const logout = () => async (dispatch) => {
+  try {
+    // Call backend to invalidate refresh token and clear HttpOnly cookie
+    await api.post("/auth/logout");
+  } catch (error) {
+    console.error("Logout request failed, cleaning local state anyway", error);
+  } finally {
+    localStorage.clear();
+    dispatch({ type: LOGOUT });
+    toast.success("Logged out successfully!");
+  }
 };
