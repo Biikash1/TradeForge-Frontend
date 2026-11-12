@@ -12,12 +12,11 @@ import Profile from "./pages/Profile/Profile";
 import NotFound from "./pages/NotFound/NotFound";
 import Auth from "./pages/Auth/Auth";
 import SearchCoins from "./pages/Search/SearchCoins";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getUser } from "./State/Authentication/Action";
-import { updateLivePrices } from "./State/Coin/ActionCoin";
-import { connectWebSocket, disconnectWebSocket } from "./config/websocket";
+import { connectWebSocket, disconnectWebSocket, subscribeToChannel, unsubscribeFromChannel } from "./config/websocket";
 
 
 function App() {
@@ -42,11 +41,30 @@ function App() {
   //Connect to WebSocket globally
   useEffect(() => {
     connectWebSocket();
-
     return () => {
       disconnectWebSocket();
     };
   }, [])
+
+
+  useEffect(() => {
+    if(auth.user?.id) {
+      const notificationChannel = `/topic/notifications/${auth.user.id}`;
+
+      subscribeToChannel(notificationChannel, (data) => {
+        if(data && data.title) {
+          toast.success(data.title, {
+            description: data.message,
+            duration: 6000,
+          });
+        }
+      });
+
+      return () => {
+          unsubscribeFromChannel(notificationChannel);
+      };
+    }
+  }, [auth.user?.id]);
 
   return (
     <>
