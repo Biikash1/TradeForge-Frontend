@@ -14,6 +14,8 @@ const TopupForm = () => {
 
   const dispatch = useDispatch();
 
+  const USD_TO_INR_ESTIMATE = 84;
+
   const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
   };
@@ -44,12 +46,28 @@ const TopupForm = () => {
         </label>
         <Input
           type="number"
+          min="0"
           step="any"
+          required
           onChange={handleChange}
           value={amount}
           className="h-11 text-base bg-slate-950/60 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-cyan-500"
           placeholder="e.g. 500"
         />
+
+        {/* Estimate Razorpay INR Charge */}
+        {paymentMethod === "RAZORPAY" && Number(amount) > 0 && (
+          <p className="text-xs text-slate-400 mt-1.5">
+             Estimated Razorpay charge:  ₹
+             {(Number(amount) * USD_TO_INR_ESTIMATE).toLocaleString(
+              "en-IN",
+              {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }
+             )} INR
+          </p>
+        )}
       </div>
 
       <div>

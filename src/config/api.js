@@ -1,34 +1,40 @@
 import axios from "axios";
 
-export const API_BASE_URL = "http://localhost:8080";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+let inMemoryJwt = null;
+
+export const setAccessToken = (token) => {
+  inMemoryJwt = token;
+};
+
+export const getAccessToken = () => inMemoryJwt;
+
+export const clearAccessToken = () => {
+  inMemoryJwt = null;
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // IMPORTANT: Send cookies with requests
+  headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
+  failedQueue.forEach((prom) =>
+    error ? prom.reject(error) : prom.resolve(token)
+  );
   failedQueue = [];
 };
 
 api.interceptors.request.use(
   (config) => {
-    const jwt = localStorage.getItem("jwt");
-    if (jwt) {
-      config.headers.Authorization = `Bearer ${jwt}`;
+    if (inMemoryJwt) {
+      config.headers.Authorization = `Bearer ${inMemoryJwt}`;
     }
     return config;
   },
@@ -40,21 +46,16 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle Rate Limiting (429) globally
     if (error.response?.status === 429) {
-      console.warn("Rate limit exceeded:", error.response.data?.message);
       return Promise.reject(error);
     }
 
-    // Skip interceptor loop if the failing request WAS the refresh token request itself
-    if (originalRequest.url.includes("/auth/refresh")) {
+    if (originalRequest?.url?.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
 
-    // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -69,27 +70,19 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Silent background refresh call utilizing the HttpOnly cookie
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
 
-        const newJwt = data.jwt;
-        localStorage.setItem("jwt", newJwt);
-        
-        // Update header for current and queued requests
-        api.defaults.headers.common["Authorization"] = `Bearer ${newJwt}`;
-        originalRequest.headers.Authorization = `Bearer ${newJwt}`;
-        
-        processQueue(null, newJwt);
+        setAccessToken(data.jwt);
+        originalRequest.headers.Authorization = `Bearer ${data.jwt}`;
+        processQueue(null, data.jwt);
         return api(originalRequest);
-        
       } catch (refreshError) {
-        // Refresh token is expired or invalid
         processQueue(refreshError, null);
-        localStorage.removeItem("jwt");
+        clearAccessToken();
         window.location.href = "/signin";
         return Promise.reject(refreshError);
       } finally {

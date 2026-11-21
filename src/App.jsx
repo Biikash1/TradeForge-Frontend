@@ -14,45 +14,62 @@ import Auth from "./pages/Auth/Auth";
 import SearchCoins from "./pages/Search/SearchCoins";
 import { toast, Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getUser } from "./State/Authentication/Action";
-import { connectWebSocket, disconnectWebSocket, subscribeToChannel, unsubscribeFromChannel } from "./config/websocket";
-
+import api, { setAccessToken } from "./config/api";
+import {
+  connectWebSocket,
+  disconnectWebSocket,
+  subscribeToChannel,
+  unsubscribeFromChannel,
+} from "./config/websocket";
 
 function App() {
   const { auth } = useSelector((store) => store);
-
   const dispatch = useDispatch();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  console.log(" auth ....", auth);
-
-  // Normalize token string
-  const token =
-    typeof auth?.jwt === "string"
-      ? auth.jwt
-      : auth?.jwt?.jwt || localStorage.getItem("jwt");
-
+  // 1. Bootstrap session on page reload via HttpOnly refresh cookie
   useEffect(() => {
-    if (token) {
-      dispatch(getUser(token));
-    }
-  }, [token, dispatch]);
+    const bootstrapAuth = async () => {
+      try {
+        const { data } = await api.post("/auth/refresh");
+        if (data?.jwt) {
+          setAccessToken(data.jwt);
+          await dispatch(getUser());
+        }
+      } catch {
+        // No valid refresh cookie — user stays on Auth screen
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
 
-  //Connect to WebSocket globally
+    bootstrapAuth();
+  }, [dispatch]);
+
+  // 2. Fetch user profile immediately after fresh login or signup
+  useEffect(() => {
+    if (auth?.jwt && !auth?.user) {
+      dispatch(getUser());
+    }
+  }, [auth?.jwt, auth?.user, dispatch]);
+
+  // 3. Connect to WebSocket globally
   useEffect(() => {
     connectWebSocket();
     return () => {
       disconnectWebSocket();
     };
-  }, [])
+  }, []);
 
-
+  // 4. Subscribe to user-specific trade notifications
   useEffect(() => {
-    if(auth.user?.id) {
+    if (auth.user?.id) {
       const notificationChannel = `/topic/notifications/${auth.user.id}`;
 
       subscribeToChannel(notificationChannel, (data) => {
-        if(data && data.title) {
+        if (data && data.title) {
           toast.success(data.title, {
             description: data.message,
             duration: 6000,
@@ -61,10 +78,18 @@ function App() {
       });
 
       return () => {
-          unsubscribeFromChannel(notificationChannel);
+        unsubscribeFromChannel(notificationChannel);
       };
     }
   }, [auth.user?.id]);
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
+        Loading TradeForge...
+      </div>
+    );
+  }
 
   return (
     <>

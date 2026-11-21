@@ -1,4 +1,4 @@
-import api from "@/config/api";
+import api, { clearAccessToken, setAccessToken } from "@/config/api";
 import { toast } from "sonner";
 import {
   GET_USER_FAILURE,
@@ -17,12 +17,11 @@ export const Register = (userData) => async (dispatch) => {
   dispatch({ type: REGISTER_REQUEST });
 
   try {
-    // Uses relative path with baseUrl automatically applied
     const response = await api.post("/auth/signup", userData);
     const authData = response.data;
 
     if (authData?.jwt) {
-      localStorage.setItem("jwt", authData.jwt);
+      setAccessToken(authData.jwt);
     }
 
     toast.success(authData?.message || "User registered successfully!");
@@ -47,7 +46,7 @@ export const Login = (userData) => async (dispatch) => {
     const authData = response.data;
 
     if (authData?.jwt) {
-      localStorage.setItem("jwt", authData.jwt);
+      setAccessToken(authData.jwt);
     }
 
     toast.success(authData?.message || "User logged in successfully!");
@@ -68,8 +67,6 @@ export const getUser = () => async (dispatch) => {
   dispatch({ type: GET_USER_REQUEST });
 
   try {
-    // No need to pass jwt parameter or custom Authorization headers;
-    // the interceptor injects the Bearer token automatically!
     const response = await api.get("/api/users/profile");
     const user = response.data;
 
@@ -88,12 +85,11 @@ export const getUser = () => async (dispatch) => {
 
 export const logout = () => async (dispatch) => {
   try {
-    // Call backend to invalidate refresh token and clear HttpOnly cookie
     await api.post("/auth/logout");
   } catch (error) {
     console.error("Logout request failed, cleaning local state anyway", error);
   } finally {
-    localStorage.clear();
+    clearAccessToken();
     dispatch({ type: LOGOUT });
     toast.success("Logged out successfully!");
   }
