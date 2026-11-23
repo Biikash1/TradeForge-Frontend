@@ -10,15 +10,11 @@ import {
 } from "./ActionWatchlistType";
 
 // Matches @GetMapping on /api/watchlist
-export const getUserWatchlist = (jwt) => async (dispatch) => {
+export const getUserWatchlist = () => async (dispatch) => {
   dispatch({ type: GET_USER_WATCHLIST_REQUEST });
 
   try {
-    const response = await api.get("/api/watchlist", {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
-    });
+    const response = await api.get("/api/watchlist");
 
     dispatch({
       type: GET_USER_WATCHLIST_SUCCESS,
@@ -34,20 +30,12 @@ export const getUserWatchlist = (jwt) => async (dispatch) => {
 
 // Matches @PostMapping("/coin/{coinId}/toggle") on /api/watchlist
 export const addItemToWatchlist =
-  ({ coinId, jwt }) =>
+  ({ coinId }) =>
   async (dispatch) => {
     dispatch({ type: ADD_COIN_TO_WATCHLIST_REQUEST });
 
     try {
-      const response = await api.post(
-        `/api/watchlist/coin/${coinId}/toggle`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        }
-      );
+      const response = await api.post(`/api/watchlist/coin/${coinId}/toggle`, {});
 
       toast.success("Watchlist updated successfully!");
 

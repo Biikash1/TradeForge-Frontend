@@ -42,34 +42,30 @@ const StockDetails = () => {
   const { coinDetails } = useSelector((store) => store.coin || {});
   const watchlistItems = useSelector((store) => store.watchlist?.items || []);
 
-  const rawJwt = localStorage.getItem("jwt");
-  const jwt = rawJwt?.startsWith("{") ? JSON.parse(rawJwt)?.jwt : rawJwt;
-
   useEffect(() => {
-    if (jwt) {
-      dispatch(getUserWatchlist(jwt));
-      if (id) {
-        dispatch(fetchCoinDetails({ coinId: id, jwt }));
-        
-        // Subscribe ONLY to this specific coin's channel
-        const channel = `/topic/price/${id}`;
-        subscribeToChannel(channel, (livePrice) => {
-          dispatch(updateLivePrices(livePrice));
-        });
+    dispatch(getUserWatchlist());
 
-        return () => {
-          unsubscribeFromChannel(channel);
-        };
-      }
+    if (id) {
+      dispatch(fetchCoinDetails({ coinId: id }));
+
+      // Subscribe ONLY to this specific coin's channel
+      const channel = `/topic/price/${id}`;
+      subscribeToChannel(channel, (livePrice) => {
+        dispatch(updateLivePrices(livePrice));
+      });
+
+      return () => {
+        unsubscribeFromChannel(channel);
+      };
     }
-  }, [dispatch, id, jwt]);
+  }, [dispatch, id]);
 
   const targetCoinId = id || coinDetails?.id;
   const isBookmarked = existInWatchlist(watchlistItems, { id: targetCoinId });
 
   const handleToggleWatchlist = () => {
-    if (!targetCoinId || !jwt) return;
-    dispatch(addItemToWatchlist({ coinId: targetCoinId, jwt }));
+    if (!targetCoinId) return;
+    dispatch(addItemToWatchlist({ coinId: targetCoinId }));
   };
 
   const marketData = coinDetails?.market_data;

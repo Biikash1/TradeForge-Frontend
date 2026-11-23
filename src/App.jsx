@@ -14,7 +14,7 @@ import Auth from "./pages/Auth/Auth";
 import SearchCoins from "./pages/Search/SearchCoins";
 import { toast, Toaster } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getUser } from "./State/Authentication/Action";
 import api, { setAccessToken } from "./config/api";
 import {
@@ -28,9 +28,14 @@ function App() {
   const { auth } = useSelector((store) => store);
   const dispatch = useDispatch();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const hasBootstrapped = useRef(false);
 
   // 1. Bootstrap session on page reload via HttpOnly refresh cookie
   useEffect(() => {
+
+    if(hasBootstrapped.current) return;
+    hasBootstrapped.current = true;
+
     const bootstrapAuth = async () => {
       try {
         const { data } = await api.post("/auth/refresh");
